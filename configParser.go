@@ -3,24 +3,26 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
-type Configuration struct {
-	username	string
-	password	string
-	endpoint	string
-	database	string
+type Config struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Endpoint string `json:"endpoint"`
+	Database string `json:"database"`
 }
 
-func parseConfigFile(configFile string) Configuration {
-	file, _ := os.Open(configFile)
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
+func ParseConfigs(file string) (config Config) {
+	jsonFile, err := os.Open(file)
 	if err != nil {
-		fmt.Println("error: ", err)
+		fmt.Println(err)
 	}
-	return configuration
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	json.Unmarshal(byteValue, &config)
+
+	return config
 }
