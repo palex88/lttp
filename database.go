@@ -3,22 +3,28 @@ package main
 import (
 	"database/sql"
 	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
 	uuid2 "github.com/google/uuid"
 )
 
-func CreateUserId() {
+type User struct {
+	Id        string
+	Email     string
+	FirstName string
+	LastName  string
+}
+
+func CreateUserId() (uuidStr string) {
 	uuid, err := uuid2.NewUUID()
 	if err != nil {
 		panic(err)
 	}
 
-	uuidString := uuid.String()
-	fmt.Println(uuidString)
-	fmt.Println(len(uuidString))
+	return uuid.String()
 }
 
-func OpenDatabaseConnection(config Config) {
+func OpenDatabaseConnection(config Config) (allRows []User) {
 
 	var (
 		id        string
@@ -33,25 +39,16 @@ func OpenDatabaseConnection(config Config) {
 		config.Endpoint,
 		config.Database)
 
-	fmt.Printf("Conn: %s\n", conn)
-
 	db, err := sql.Open("mysql", conn)
-	fmt.Println("DB: ", db)
 	if err != nil {
-		fmt.Println("OPEN FAILURE")
 		fmt.Println(err)
 	}
 	defer db.Close()
 
-	fmt.Println("getting rows")
 	rows, err := db.Query("SELECT * FROM users")
-	fmt.Println("rows: ", rows)
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Println("rows")
-	fmt.Println(rows)
 	defer rows.Close()
 
 	for rows.Next() {
@@ -59,8 +56,11 @@ func OpenDatabaseConnection(config Config) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(id, email, firstname, lastname)
+		u := User{id, email, firstname, lastname}
+		allRows = append(allRows, u)
 	}
+
+	return allRows
 }
 
 func main() {
@@ -70,5 +70,8 @@ func main() {
 	fmt.Printf("Endpoint: %s\n", config.Endpoint)
 	fmt.Printf("Database: %s\n", config.Database)
 
-	OpenDatabaseConnection(config)
+	allRows := OpenDatabaseConnection(config)
+	for _, element := range allRows {
+		fmt.Println(element.Email)
+	}
 }
