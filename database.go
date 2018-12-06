@@ -7,46 +7,7 @@ import (
 	uuid2 "github.com/google/uuid"
 )
 
-func main() {
-
-	configuration := parseConfigFile("config.json")
-	fmt.Println(configuration.username)
-
-	var (
-		id        string
-		email     string
-		firstname string
-		lastname  string
-	)
-
-	//sql := fmt.Sprintf("%s:%stcp(%s:3306)/%s", configuration.username, configuration.password, configuration.endpoint, configuration.database)
-
-	db, err := sql.Open(
-		"mysql",
-		"")
-	if err != nil {
-		panic(err)
-	}
-
-	rows, err := db.Query("SELECT * FROM users")
-	if err != nil {
-		panic(err)
-	}
-
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(&id, &email, &firstname, &lastname)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(id, email, firstname, lastname)
-	}
-
-	defer db.Close()
-}
-
-func createUserId() {
+func CreateUserId() {
 	uuid, err := uuid2.NewUUID()
 	if err != nil {
 		panic(err)
@@ -55,4 +16,59 @@ func createUserId() {
 	uuidString := uuid.String()
 	fmt.Println(uuidString)
 	fmt.Println(len(uuidString))
+}
+
+func OpenDatabaseConnection(config Config) {
+
+	var (
+		id        string
+		email     string
+		firstname string
+		lastname  string
+	)
+
+	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
+		config.Username,
+		config.Password,
+		config.Endpoint,
+		config.Database)
+
+	fmt.Printf("Conn: %s\n", conn)
+
+	db, err := sql.Open("mysql", conn)
+	fmt.Println("DB: ", db)
+	if err != nil {
+		fmt.Println("OPEN FAILURE")
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	fmt.Println("getting rows")
+	rows, err := db.Query("SELECT * FROM users")
+	fmt.Println("rows: ", rows)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("rows")
+	fmt.Println(rows)
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&id, &email, &firstname, &lastname)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(id, email, firstname, lastname)
+	}
+}
+
+func main() {
+	config := ParseConfigs("config.json")
+	fmt.Printf("Username: %s\n", config.Username)
+	fmt.Printf("Password: %s\n", config.Password)
+	fmt.Printf("Endpoint: %s\n", config.Endpoint)
+	fmt.Printf("Database: %s\n", config.Database)
+
+	OpenDatabaseConnection(config)
 }
