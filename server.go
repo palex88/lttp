@@ -3,7 +3,6 @@ package main
 import (
 	"html/template"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"regexp"
 )
@@ -13,7 +12,7 @@ var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
 type Page struct {
 	Title string
-	Body []byte
+	Body  []byte
 }
 
 func (p *Page) save() error {
@@ -39,7 +38,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	renderTemplate(w, "view", p)
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request, title string)  {
+func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -47,7 +46,7 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string)  {
 	renderTemplate(w, "edit", p)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request, title string)  {
+func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
 	err := p.save()
@@ -76,10 +75,11 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 	}
 }
 
-func main()  {
-	http.HandleFunc("/view/", makeHandler(viewHandler))
-	http.HandleFunc("/edit/", makeHandler(editHandler))
-	http.HandleFunc("/save/", makeHandler(saveHandler))
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
+//
+//func main()  {
+//	http.HandleFunc("/view/", makeHandler(viewHandler))
+//	http.HandleFunc("/edit/", makeHandler(editHandler))
+//	http.HandleFunc("/save/", makeHandler(saveHandler))
+//
+//	log.Fatal(http.ListenAndServe(":8080", nil))
+//}
