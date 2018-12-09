@@ -15,23 +15,7 @@ type User struct {
 	LastName  string
 }
 
-func CreateUserId() (uuidStr string) {
-	uuid, err := uuid2.NewUUID()
-	if err != nil {
-		panic(err)
-	}
-
-	return uuid.String()
-}
-
-func OpenDatabaseConnection(config Config) (allRows []User) {
-
-	var (
-		id        string
-		email     string
-		firstname string
-		lastname  string
-	)
+func OpenDatabase(config Config) (db *sql.DB) {
 
 	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
 		config.Username,
@@ -43,7 +27,43 @@ func OpenDatabaseConnection(config Config) (allRows []User) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer db.Close()
+
+	return db
+}
+
+func CreateUserId() (uuidStr string) {
+	uuid, err := uuid2.NewUUID()
+	if err != nil {
+		panic(err)
+	}
+
+	return uuid.String()
+}
+
+func CreateUser(db *sql.DB, email string, firstName string, lastName string) (result sql.Result) {
+
+	userId := CreateUserId()
+
+	query := fmt.Sprintf(
+		"INSERT INTO users (id, email, firstname, lastname) VALUES ('%s', '%s', '%s', '%s')",
+		userId, email, firstName, lastName)
+
+	result, err := db.Exec(query)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return result
+}
+
+func GetAllUsers(db *sql.DB) (allRows []User) {
+
+	var (
+		id        string
+		email     string
+		firstname string
+		lastname  string
+	)
 
 	rows, err := db.Query("SELECT * FROM users")
 	if err != nil {
@@ -63,15 +83,26 @@ func OpenDatabaseConnection(config Config) (allRows []User) {
 	return allRows
 }
 
-func main() {
-	config := ParseConfigs("config.json")
-	fmt.Printf("Username: %s\n", config.Username)
-	fmt.Printf("Password: %s\n", config.Password)
-	fmt.Printf("Endpoint: %s\n", config.Endpoint)
-	fmt.Printf("Database: %s\n", config.Database)
+func GetAllLinks(db *sql.DB, userId string) (allLinks []string) {
 
-	allRows := OpenDatabaseConnection(config)
-	for _, element := range allRows {
-		fmt.Println(element.Email)
+	var link string
+
+	query := fmt.Sprintf("SELECT link FROM links WHERE userid='%s'", userId)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&link)
+		if err != nil {
+			fmt.Print(err)
+		}
+
+		allLinks = append(allLinks, link)
+	}
+
+	return allLinks
 }
