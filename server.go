@@ -74,12 +74,3 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.Handl
 		fn(w, r, m[2])
 	}
 }
-
-//
-//func main()  {
-//	http.HandleFunc("/view/", makeHandler(viewHandler))
-//	http.HandleFunc("/edit/", makeHandler(editHandler))
-//	http.HandleFunc("/save/", makeHandler(saveHandler))
-//
-//	log.Fatal(http.ListenAndServe(":8080", nil))
-//}
