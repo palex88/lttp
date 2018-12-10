@@ -8,28 +8,21 @@ import (
 	uuid2 "github.com/google/uuid"
 )
 
-type User struct {
-	Id        string
-	Email     string
-	FirstName string
-	LastName  string
-}
-
-func OpenDatabase(config Config) (db *sql.DB) {
-
-	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
-		config.Username,
-		config.Password,
-		config.Endpoint,
-		config.Database)
-
-	db, err := sql.Open("mysql", conn)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return db
-}
+//func OpenDatabase(config Config) (db *sql.DB) {
+//
+//	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
+//		config.Username,
+//		config.Password,
+//		config.Endpoint,
+//		config.Database)
+//
+//	db, err := sql.Open("mysql", conn)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//
+//	return db
+//}
 
 func CreateUserId() (uuidStr string) {
 	uuid, err := uuid2.NewUUID()
@@ -40,7 +33,7 @@ func CreateUserId() (uuidStr string) {
 	return uuid.String()
 }
 
-func CreateUser(db *sql.DB, email string, firstName string, lastName string) (result sql.Result) {
+func CreateUser(db *sql.DB, email string, firstName string, lastName string) (result sql.Result, err error) {
 
 	userId := CreateUserId()
 
@@ -48,15 +41,15 @@ func CreateUser(db *sql.DB, email string, firstName string, lastName string) (re
 		"INSERT INTO users (id, email, firstname, lastname) VALUES ('%s', '%s', '%s', '%s')",
 		userId, email, firstName, lastName)
 
-	result, err := db.Exec(query)
+	result, err = db.Exec(query)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	return result
+	return result, err
 }
 
-func GetAllUsers(db *sql.DB) (allRows []User) {
+func GetAllUsers(db *sql.DB) (allRows []User, err error) {
 
 	var (
 		id        string
@@ -80,10 +73,10 @@ func GetAllUsers(db *sql.DB) (allRows []User) {
 		allRows = append(allRows, u)
 	}
 
-	return allRows
+	return allRows, err
 }
 
-func GetAllLinks(db *sql.DB, userId string) (allLinks []string) {
+func GetAllLinks(db *sql.DB, userId string) (allLinks []string, err error) {
 
 	var link string
 
@@ -104,5 +97,24 @@ func GetAllLinks(db *sql.DB, userId string) (allLinks []string) {
 		allLinks = append(allLinks, link)
 	}
 
-	return allLinks
+	return allLinks, err
+}
+
+func GetUserId(db *sql.DB, email string) (id string, err error) {
+
+	query := fmt.Sprintf("SELECT id FROM users WHERE email='%s'", email)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for rows.Next() {
+		err := rows.Scan(&id)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return id, err
 }
