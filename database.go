@@ -2,28 +2,37 @@ package db
 
 import (
 	"database/sql"
+	"encoding/gob"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	uuid2 "github.com/google/uuid"
+	. "github.com/palex88/lttp/config"
 	. "github.com/palex88/lttp/user"
 )
 
-//func OpenDatabase(config Config) (db *sql.DB) {
-//
-//	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
-//		config.Username,
-//		config.Password,
-//		config.Endpoint,
-//		config.Database)
-//
-//	db, err := sql.Open("mysql", conn)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//
-//	return db
-//}
+var DBCon *sql.DB
+
+func init() {
+
+	var err error
+
+	gob.Register(User{})
+
+	config := ParseConfigs()
+
+	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
+		config.Username,
+		config.Password,
+		config.Endpoint,
+		config.Database)
+
+	DBCon, err = sql.Open("mysql", conn)
+	if err != nil {
+		log.Println(err)
+	}
+}
 
 func CreateUserId() (uuidStr string) {
 	uuid, err := uuid2.NewUUID()
@@ -34,7 +43,7 @@ func CreateUserId() (uuidStr string) {
 	return uuid.String()
 }
 
-func CreateUser(db *sql.DB, email string, firstName string, lastName string, password string) (result sql.Result, err error) {
+func CreateUser(email string, firstName string, lastName string, password string) (result sql.Result, err error) {
 
 	userId := CreateUserId()
 	hashedpassword, salt := hashAndSalt(password)
@@ -43,7 +52,7 @@ func CreateUser(db *sql.DB, email string, firstName string, lastName string, pas
 		"INSERT INTO users (id, email, firstname, lastname, hashedpassword, salt) VALUES ('%s', '%s', '%s', '%s, %b, %b')",
 		userId, email, firstName, lastName, hashedpassword, salt)
 
-	result, err = db.Exec(query)
+	result, err = DBCon.Exec(query)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -51,7 +60,7 @@ func CreateUser(db *sql.DB, email string, firstName string, lastName string, pas
 	return result, err
 }
 
-func GetAllUsers(db *sql.DB) (allRows []User, err error) {
+func GetAllUsers() (allRows []User, err error) {
 
 	var (
 		id        string
@@ -60,7 +69,7 @@ func GetAllUsers(db *sql.DB) (allRows []User, err error) {
 		lastname  string
 	)
 
-	rows, err := db.Query("SELECT * FROM users")
+	rows, err := DBCon.Query("SELECT * FROM users")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -78,13 +87,13 @@ func GetAllUsers(db *sql.DB) (allRows []User, err error) {
 	return allRows, err
 }
 
-func GetAllLinks(db *sql.DB, userId string) (allLinks []string, err error) {
+func GetAllLinks(userId string) (allLinks []string, err error) {
 
 	var link string
 
 	query := fmt.Sprintf("SELECT link FROM links WHERE userid='%s'", userId)
 
-	rows, err := db.Query(query)
+	rows, err := DBCon.Query(query)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -102,11 +111,11 @@ func GetAllLinks(db *sql.DB, userId string) (allLinks []string, err error) {
 	return allLinks, err
 }
 
-func GetUserId(db *sql.DB, email string) (id string, err error) {
+func GetUserId(email string) (id string, err error) {
 
 	query := fmt.Sprintf("SELECT id FROM users WHERE email='%s'", email)
 
-	rows, err := db.Query(query)
+	rows, err := DBCon.Query(query)
 	if err != nil {
 		fmt.Println(err)
 	}
