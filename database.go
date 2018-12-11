@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"log"
@@ -53,6 +54,38 @@ func CreateUser(email string, firstName string, lastName string, password string
 	}
 
 	return result, err
+}
+
+func AuthUser(email string, password string) (authed bool) {
+
+	var salt []byte
+	var hashedPassword []byte
+	query := fmt.Sprintf("SELECT hashedpassword, salt FROM users WHERE email='%s' LIMIT 1", email)
+
+	rows, err := Conn.Query(query)
+	if err != nil {
+		log.Println(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&hashedPassword, &salt)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	bPassword := []byte(password)
+	hash, err := checkPassword(bPassword, salt)
+	if err != nil {
+		log.Println(err)
+	}
+
+	if bytes.Compare(hash, hashedPassword) == 0 {
+		return true
+	} else {
+		return false
+	}
 }
 
 func GetAllUsers() (allRows []User, err error) {
