@@ -1,24 +1,19 @@
-package db
+package main
 
 import (
 	"database/sql"
-	"encoding/gob"
 	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	uuid2 "github.com/google/uuid"
-	. "github.com/palex88/lttp/config"
-	. "github.com/palex88/lttp/user"
 )
 
-var DBCon *sql.DB
+var Conn *sql.DB
 
 func init() {
 
 	var err error
-
-	gob.Register(User{})
 
 	config := ParseConfigs()
 
@@ -28,7 +23,7 @@ func init() {
 		config.Endpoint,
 		config.Database)
 
-	DBCon, err = sql.Open("mysql", conn)
+	Conn, err = sql.Open("mysql", conn)
 	if err != nil {
 		log.Println(err)
 	}
@@ -49,10 +44,10 @@ func CreateUser(email string, firstName string, lastName string, password string
 	hashedpassword, salt := hashAndSalt(password)
 
 	query := fmt.Sprintf(
-		"INSERT INTO users (id, email, firstname, lastname, hashedpassword, salt) VALUES ('%s', '%s', '%s', '%s, %b, %b')",
+		"INSERT INTO users (id, email, firstname, lastname, hashedpassword, salt) VALUES ('%s', '%s', '%s', '%s', '%b', '%b')",
 		userId, email, firstName, lastName, hashedpassword, salt)
 
-	result, err = DBCon.Exec(query)
+	result, err = Conn.Exec(query)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -69,7 +64,7 @@ func GetAllUsers() (allRows []User, err error) {
 		lastname  string
 	)
 
-	rows, err := DBCon.Query("SELECT * FROM users")
+	rows, err := Conn.Query("SELECT * FROM users")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -93,7 +88,7 @@ func GetAllLinks(userId string) (allLinks []string, err error) {
 
 	query := fmt.Sprintf("SELECT link FROM links WHERE userid='%s'", userId)
 
-	rows, err := DBCon.Query(query)
+	rows, err := Conn.Query(query)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -115,7 +110,7 @@ func GetUserId(email string) (id string, err error) {
 
 	query := fmt.Sprintf("SELECT id FROM users WHERE email='%s'", email)
 
-	rows, err := DBCon.Query(query)
+	rows, err := Conn.Query(query)
 	if err != nil {
 		fmt.Println(err)
 	}
