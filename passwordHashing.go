@@ -26,3 +26,8 @@ func hashAndSalt(password string) ([]byte, []byte) {
 
 	return hash, salt
 }
+
+func checkPassword(password []byte, salt []byte) ([]byte, error) {
+	hash, err := scrypt.Key(password, salt, 1<<14, 8, 1, pwHashBytes)
+	return hash, err
+}
