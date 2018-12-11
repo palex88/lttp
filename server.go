@@ -1,9 +1,11 @@
-package server
+package main
 
 import (
 	"encoding/gob"
 	"fmt"
 	"github.com/gorilla/sessions"
+	. "github.com/palex88/lttp/db"
+	. "github.com/palex88/lttp/user"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -28,7 +30,7 @@ type Page struct {
 	Body  []byte
 }
 
-func init()  {
+func init() {
 
 	log.Println("init")
 	gob.Register(User{})
@@ -113,7 +115,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request)  {
+func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
 	if err != nil {
@@ -172,7 +174,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home/", http.StatusFound)
 }
 
-func createUserHandler(w http.ResponseWriter, r *http.Request)  {
+func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
 	if err != nil {
