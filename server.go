@@ -87,8 +87,6 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	//var user User
-
 	session, err := store.Get(r, "session-name")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -97,14 +95,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	user := session.Values["name"]
 	log.Println("Session user: ", user)
-
-	//if len(u) > 0 {
-	//	user = User{
-	//		FirstName: "",
-	//		Email:     u,
-	//		LastName:  "",
-	//	}
-	//}
 
 	t, _ := template.ParseFiles("pages/home.html")
 	if (User{}) == user {
@@ -124,7 +114,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	name := session.Values["name"]
 	if (User{}) != name {
 		log.Println("User null")
-		http.Redirect(w, r, "/home/", http.StatusSeeOther)
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
 
 	if r.Method == "GET" {
@@ -134,22 +124,29 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		err = r.ParseForm()
-		//if err == nil {
-		//	http.Error(w, err.Error(), http.StatusInternalServerError)
-		//}
-		email := r.Form["email"][0]
-		password := r.Form["password"]
-		log.Printf("E: %s, P: %s\n", email, password)
-
-		user := User{Email: email}
-
-		session.Values["name"] = user
-		err = session.Save(r, w)
 		if err != nil {
-			log.Println(err)
-			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		email := r.Form["email"][0]
+		password := r.Form["password"][0]
+
+		auth := AuthUser(email, password)
+		if auth {
+
+			user := User{Email: email}
+
+			session.Values["name"] = user
+			err = session.Save(r, w)
+			if err != nil {
+				log.Println(err)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, "/home", http.StatusFound)
+			}
 		} else {
-			http.Redirect(w, r, "/home/", http.StatusFound)
+			log.Printf("Login auth failed: %s\n", email)
+			session.AddFlash("error", "Username or password incorrect.")
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		}
 	}
 }
@@ -162,7 +159,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := fmt.Sprint(session.Values["name"])
 	if len(name) == 0 {
-		http.Redirect(w, r, "/home/", http.StatusSeeOther)
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
 
 	session.Values["name"] = User{}
@@ -170,7 +167,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-	http.Redirect(w, r, "/home/", http.StatusFound)
+	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
 func createAccountHandler(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +179,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := session.Values["name"]
 	if name != (User{}) {
-		http.Redirect(w, r, "/home/", http.StatusSeeOther)
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
 	}
 
 	if r.Method == "GET" {
@@ -200,19 +197,19 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("Passwords don't match")
 			session.AddFlash("error", "Passwords dont match.")
 			session.Save(r, w)
-			http.Redirect(w, r, "/create-account/", http.StatusSeeOther)
+			http.Redirect(w, r, "/create-account", http.StatusSeeOther)
 		} else {
 			result, err := CreateUser(email, firstName, lastName, password)
 			if err != nil {
 				log.Println(err)
 				session.AddFlash("error", "Account could not be created, try a different email.")
 				session.Save(r, w)
-				http.Redirect(w, r, "/create-account/", http.StatusSeeOther)
+				http.Redirect(w, r, "/create-account", http.StatusSeeOther)
 			} else {
 				log.Printf("New account results: %s\n", result)
 				session.Values["name"] = User{Email: email, FirstName: firstName, LastName: lastName}
 				session.Save(r, w)
-				http.Redirect(w, r, "/home/", 302)
+				http.Redirect(w, r, "/home", 302)
 			}
 		}
 	}
