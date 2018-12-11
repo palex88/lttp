@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -42,11 +42,11 @@ func CreateUserId() (uuidStr string) {
 func CreateUser(email string, firstName string, lastName string, password string) (result sql.Result, err error) {
 
 	userId := CreateUserId()
-	hashedpassword, salt := hashAndSalt(password)
+	hashedPassword := hashAndSalt(password)
 
 	query := fmt.Sprintf(
-		"INSERT INTO users (id, email, firstname, lastname, hashedpassword, salt) VALUES ('%s', '%s', '%s', '%s', '%b', '%b')",
-		userId, email, firstName, lastName, hashedpassword, salt)
+		"INSERT INTO users (id, email, firstname, lastname, hashedpassword) VALUES ('%s', '%s', '%s', '%s', '%s')",
+		userId, email, firstName, lastName, string(hashedPassword))
 
 	result, err = Conn.Exec(query)
 	if err != nil {
@@ -56,11 +56,10 @@ func CreateUser(email string, firstName string, lastName string, password string
 	return result, err
 }
 
-func AuthUser(email string, password string) (authed bool) {
+func AuthUser(email string, password string) bool {
 
-	var salt []byte
-	var hashedPassword []byte
-	query := fmt.Sprintf("SELECT hashedpassword, salt FROM users WHERE email='%s' LIMIT 1", email)
+	var hashedPassword string
+	query := fmt.Sprintf("SELECT hashedpassword FROM users WHERE email='%s' LIMIT 1", email)
 
 	rows, err := Conn.Query(query)
 	if err != nil {
@@ -69,19 +68,18 @@ func AuthUser(email string, password string) (authed bool) {
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&hashedPassword, &salt)
+		err = rows.Scan(&hashedPassword)
 		if err != nil {
 			log.Println(err)
 		}
 	}
 
 	bPassword := []byte(password)
-	hash, err := checkPassword(bPassword, salt)
-	if err != nil {
-		log.Println(err)
-	}
+	bHash := []byte(hashedPassword)
 
-	if bytes.Compare(hash, hashedPassword) == 0 {
+	err = bcrypt.CompareHashAndPassword(bHash, bPassword)
+	log.Println("PW Compare: ", err)
+	if err == nil {
 		return true
 	} else {
 		return false
