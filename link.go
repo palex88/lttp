@@ -1,4 +1,4 @@
-package link
+package main
 
 type Link struct {
 	LinkUrl string
