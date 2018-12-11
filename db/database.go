@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"database/sql"
@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	uuid2 "github.com/google/uuid"
+	. "github.com/palex88/lttp/user"
 )
 
 //func OpenDatabase(config Config) (db *sql.DB) {
