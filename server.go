@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/gob"
@@ -170,6 +170,30 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 	}
 	http.Redirect(w, r, "/home/", http.StatusFound)
+}
+
+func createUserHandler(w http.ResponseWriter, r *http.Request)  {
+
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	name := session.Values["name"]
+	if name != (User{}) {
+		http.Redirect(w, r, "/home/", http.StatusSeeOther)
+	}
+
+	if r.Method == "GET" {
+		t, _ := template.ParseFiles("pages/createuser.html")
+		t.Execute(w, nil)
+	} else if r.Method == "POST" {
+		email := r.FormValue("email")
+		firstName := r.FormValue("firstname")
+		lastName := r.FormValue("lastname")
+		password := r.FormValue("password")
+		result, err := CreateUser(email, firstName, lastName, password)
+	}
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {

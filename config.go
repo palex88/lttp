@@ -1,17 +1,13 @@
 package main
 
-import (
-	"database/sql"
-	"fmt"
-)
-
-var (
-	Database     *sql.DB
+//var (
+//	Database   *sql.DB
+//	ConfigFile = "config.json"
 	//OAuthConfig  *oauth2.Config
 	//SessionStore sessions.Store
-)
+//)
 
-func init() {
+//func init() {
 	//OAuthConfig = configureOAuthClient("clientid", "clientsecret")
 
 	//cookieStore := sessions.NewCookieStore([]byte("something-very-secret"))
@@ -19,23 +15,9 @@ func init() {
 	//	HttpOnly: true,
 	//}
 	//SessionStore = cookieStore
-}
+//}
 
-func configureDatabase(config Config) (db *sql.DB) {
 
-	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
-		config.Username,
-		config.Password,
-		config.Endpoint,
-		config.Database)
-
-	db, err := sql.Open("mysql", conn)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return db
-}
 
 //func configureOAuthClient(clientID, clientSecret string) *oauth2.Config {
 //	redirectURL := os.Getenv("OAUTH2_CALLBACK")

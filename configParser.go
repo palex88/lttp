@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -14,8 +14,8 @@ type Config struct {
 	Database string `json:"database"`
 }
 
-func ParseConfigs(file string) (config Config) {
-	jsonFile, err := os.Open(file)
+func ParseConfigs() (config Config) {
+	jsonFile, err := os.Open("config.json")
 	if err != nil {
 		fmt.Println(err)
 	}

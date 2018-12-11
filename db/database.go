@@ -33,13 +33,14 @@ func CreateUserId() (uuidStr string) {
 	return uuid.String()
 }
 
-func CreateUser(db *sql.DB, email string, firstName string, lastName string) (result sql.Result, err error) {
+func CreateUser(db *sql.DB, email string, firstName string, lastName string, password string) (result sql.Result, err error) {
 
 	userId := CreateUserId()
+	hashedpassword, salt := hashAndSalt(password)
 
 	query := fmt.Sprintf(
-		"INSERT INTO users (id, email, firstname, lastname) VALUES ('%s', '%s', '%s', '%s')",
-		userId, email, firstName, lastName)
+		"INSERT INTO users (id, email, firstname, lastname, hashedpassword, salt) VALUES ('%s', '%s', '%s', '%s, %b, %b')",
+		userId, email, firstName, lastName, hashedpassword, salt)
 
 	result, err = db.Exec(query)
 	if err != nil {
