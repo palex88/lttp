@@ -4,8 +4,6 @@ import (
 	"encoding/gob"
 	"fmt"
 	"github.com/gorilla/sessions"
-	. "github.com/palex88/lttp/db"
-	. "github.com/palex88/lttp/user"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -32,10 +30,11 @@ type Page struct {
 
 func init() {
 
-	log.Println("init")
 	gob.Register(User{})
 
-	store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	log.Printf("Session key: %s", os.Getenv("SESSION_KEY"))
+	//store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	store = sessions.NewCookieStore([]byte("RVPF3qQx9qK?riUgnV$r3F(a"))
 	store.Options = &sessions.Options{
 		Domain:   "localhost",
 		Path:     "/",
@@ -187,14 +186,35 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("pages/createuser.html")
-		t.Execute(w, nil)
+		flash := session.Flashes("error")
+		log.Printf("Flash: %s", flash)
+		t, _ := template.ParseFiles("pages/createaccount.html")
+		t.Execute(w, flash)
 	} else if r.Method == "POST" {
 		email := r.FormValue("email")
 		firstName := r.FormValue("firstname")
 		lastName := r.FormValue("lastname")
 		password := r.FormValue("password")
-		result, err := CreateUser(email, firstName, lastName, password)
+		confirmPassword := r.FormValue("confirmpassword")
+		if password != confirmPassword {
+			log.Println("Passwords don't match")
+			session.AddFlash("error", "Passwords dont match.")
+			session.Save(r, w)
+			http.Redirect(w, r, "/create-account/", http.StatusSeeOther)
+		} else {
+			result, err := CreateUser(email, firstName, lastName, password)
+			if err != nil {
+				log.Println(err)
+				session.AddFlash("error", "Account could not be created, try a different email.")
+				session.Save(r, w)
+				http.Redirect(w, r, "/create-account/", http.StatusSeeOther)
+			} else {
+				log.Printf("New account results: %s\n", result)
+				session.Values["name"] = User{Email: email, FirstName: firstName, LastName: lastName}
+				session.Save(r, w)
+				http.Redirect(w, r, "/home/", 302)
+			}
+		}
 	}
 }
 
