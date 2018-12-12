@@ -73,12 +73,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	name := session.Values["name"]
-	if name == nil || name == (User{}) {
-		log.Println("User null")
-		http.Redirect(w, r, "/home", http.StatusSeeOther)
-		return
-	}
+	//name := session.Values["name"]
+	//if name == nil || name == (User{}) {
+	//	log.Println("User null")
+	//	http.Redirect(w, r, "/home", http.StatusSeeOther)
+	//	return
+	//}
 
 	if r.Method == "GET" {
 		log.Println("GET login page")
