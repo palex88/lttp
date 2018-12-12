@@ -44,3 +44,10 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[metadata.heroku]
+  root-package = "github.com/palex88/lttp"
+  go-version = "go1.11"
+  install = [ "./..." ]
+  ensure = "false"
+  additional-tools = ["github.com/golang-migrate/migrate"]
