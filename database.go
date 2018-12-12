@@ -56,10 +56,16 @@ func CreateUser(email string, firstName string, lastName string, password string
 	return result, err
 }
 
-func AuthUser(email string, password string) bool {
+func AuthUser(email string, password string) (user User, ok bool) {
 
-	var hashedPassword string
-	query := fmt.Sprintf("SELECT hashedpassword FROM users WHERE email='%s' LIMIT 1", email)
+	var (
+		id string
+		firstname string
+		lastname string
+		hashedPassword string
+	)
+
+	query := fmt.Sprintf("SELECT id, firstname, lastname, hashedpassword FROM users WHERE email='%s' LIMIT 1", email)
 
 	rows, err := Conn.Query(query)
 	if err != nil {
@@ -68,7 +74,7 @@ func AuthUser(email string, password string) bool {
 	defer rows.Close()
 
 	for rows.Next() {
-		err = rows.Scan(&hashedPassword)
+		err = rows.Scan(&id, &firstname, &lastname, &hashedPassword)
 		if err != nil {
 			log.Println(err)
 		}
@@ -80,10 +86,62 @@ func AuthUser(email string, password string) bool {
 	err = bcrypt.CompareHashAndPassword(bHash, bPassword)
 	log.Println("PW Compare: ", err)
 	if err == nil {
-		return true
+		ok = true
+		user.Id = id
+		user.FirstName = firstname
+		user.LastName = lastname
+		user.Email = email
 	} else {
-		return false
+		ok = false
 	}
+
+	return user, ok
+}
+
+func AddLink(user User, link string) (result sql.Result, err error) {
+
+	query := fmt.Sprintf("INSERT INTO links (link, userid) VALUES ('%s', '%s')", link, user.Id)
+
+	result, err = Conn.Exec(query)
+	log.Printf("Add, Result: %s, err:, %s", result, err)
+
+	return result, err
+}
+
+func deleteLink(user User, link string) (result sql.Result, err error) {
+
+	query := fmt.Sprintf("DELETE FROM links WHERE link='%s' AND userid='%s'", link, user.Id)
+
+	result, err = Conn.Exec(query)
+	log.Printf("Delete, Result: %s, err:, %s", result, err)
+
+	return result, err
+}
+
+func GetUser(userEmail string) (u User, err error) {
+	var (
+		id        string
+		email     string
+		firstname string
+		lastname  string
+	)
+
+	query := fmt.Sprintf("SELECT * FROM users WJHERE email='%s' LIMIT 1", userEmail)
+
+	rows, err := Conn.Query(query)
+	if err != nil {
+		log.Println(err)
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&id, &email, &firstname, &lastname)
+		if err != nil {
+			log.Println(err)
+		}
+		u = User{id, email, firstname, lastname}
+	}
+
+	return u, err
 }
 
 func GetAllUsers() (allRows []User, err error) {
@@ -97,14 +155,14 @@ func GetAllUsers() (allRows []User, err error) {
 
 	rows, err := Conn.Query("SELECT * FROM users")
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		err := rows.Scan(&id, &email, &firstname, &lastname)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 		u := User{id, email, firstname, lastname}
 		allRows = append(allRows, u)
@@ -113,11 +171,15 @@ func GetAllUsers() (allRows []User, err error) {
 	return allRows, err
 }
 
-func GetAllLinks(userId string) (allLinks []string, err error) {
+func GetAllLinks(user User) (profile Profile, err error) {
 
-	var link string
+	var (
+		link string
+		allLinks []string
+	)
 
-	query := fmt.Sprintf("SELECT link FROM links WHERE userid='%s'", userId)
+	query := fmt.Sprintf("SELECT link FROM links WHERE userId='%s'", user.Id)
+	log.Println("Q: ", query)
 
 	rows, err := Conn.Query(query)
 	if err != nil {
@@ -125,16 +187,20 @@ func GetAllLinks(userId string) (allLinks []string, err error) {
 	}
 	defer rows.Close()
 
+	log.Println("Checking for links")
 	for rows.Next() {
 		err := rows.Scan(&link)
 		if err != nil {
 			fmt.Print(err)
 		}
-
+		log.Println("Link: ", link)
 		allLinks = append(allLinks, link)
 	}
 
-	return allLinks, err
+	profile.User = user
+	profile.Links = allLinks
+
+	return profile, err
 }
 
 func GetUserId(email string) (id string, err error) {
