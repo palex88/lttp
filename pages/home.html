@@ -12,8 +12,8 @@
                         <tr>
                             <td><a href="{{.}}" target="_blank">{{.}}</a></td>
                             <td>
-                                <a href="/deletelink?link={{.}}">
-                                    <span class="glyphicon glyphicon-trash"></span>
+                                <a href="/deletelink?link={{.}}">Delete
+                                    {{/*<span class="glyphicon glyphicon-trash"></span>*/}}
                                 </a>
                             </td>
                         </tr>
@@ -23,7 +23,15 @@
                 <p>You haven't saved any links yet.</p>
             {{end}}
         {{else}}
-            <p>Not logged in.</p>
+            <img src="/resources/lttp-logo4.png">
+            <p>lttp is an app that lets you save things you find interesting.</p>
+            <p>Login or create and account to start.</p>
+            <form method="get" action="/login">
+                <input type="submit" value="Login">
+            </form>
+            <form method="get" action="/create-account">
+                <input type="submit" value="Create Account">
+            </form>
         {{end}}
     </div>
     {{template "footer" .}}

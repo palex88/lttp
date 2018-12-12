@@ -26,3 +26,27 @@
 body {
     font-family: "Courier New";
 }
+
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #bfbfbf;
+    color: #404040;
+    text-align: left;
+    margin: auto;
+    vertical-align: center;
+    line-height: 50px;
+    padding-left: 10%;
+}
+
+span {
+    padding: 5px;
+}
+
+img {
+    height: 100px;
+    width: auto;
+}
