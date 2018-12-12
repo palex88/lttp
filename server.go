@@ -74,7 +74,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := session.Values["name"]
-	if name != nil && name != (User{}) {
+	if name == nil || name == (User{}) {
 		log.Println("User null")
 		http.Redirect(w, r, "/home", http.StatusSeeOther)
 		return
