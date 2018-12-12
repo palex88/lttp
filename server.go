@@ -57,12 +57,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Session user: ", user)
 	}
 
-	//t, _ := template.ParseFiles("pages/home.html")
 	if (User{}) == original {
 		templates.ExecuteTemplate(w, "home", nil)
 	} else {
 		profile, err = GetAllLinks(original)
-		log.Printf("Profile: %s", profile)
+		log.Printf("Profile: %v", profile)
 		templates.ExecuteTemplate(w, "home", profile)
 	}
 }
@@ -75,7 +74,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := session.Values["name"]
-	if (User{}) != name {
+	if name != nil && name != (User{}) {
 		log.Println("User null")
 		http.Redirect(w, r, "/home", http.StatusSeeOther)
 		return

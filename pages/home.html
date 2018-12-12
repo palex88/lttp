@@ -10,7 +10,8 @@
                 <table>
                     {{range .Links}}
                         <tr>
-                            <td><a href="{{.}}" target="_blank">{{.}}</a></td>
+                            <td><a href="{{.LinkUrl}}" target="_blank">{{.LinkUrl}}</a></td>
+                            <td>{{.CreateDate}}</td>
                             <td>
                                 <a href="/deletelink?link={{.}}">Delete
                                     {{/*<span class="glyphicon glyphicon-trash"></span>*/}}

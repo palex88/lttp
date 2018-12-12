@@ -13,12 +13,15 @@ import (
 
 var Conn *sql.DB
 
+// Initializes the database.
+// When initializing it gets the configs from either system vars,
+// or from a config file if vars are not set.
 func init() {
 
 	var (
-		err error
+		err    error
 		config Config
-		)
+	)
 
 	config.Username = os.Getenv("USERNAME")
 	config.Password = os.Getenv("PASSWORD")
@@ -43,15 +46,20 @@ func init() {
 	}
 }
 
+// Creates user id. Uses the UUID2 package to ensure all IDs are unique.
+// Returns the UUID.
 func CreateUserId() (uuidStr string) {
 	uuid, err := uuid2.NewUUID()
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	return uuid.String()
 }
 
+// Creates a new user, given the user email is not already in use.
+// Returns the results from the update and error. If error is not nil
+// then a new uer has been created.
 func CreateUser(email string, firstName string, lastName string, password string) (result sql.Result, err error) {
 
 	userId := CreateUserId()
@@ -69,12 +77,17 @@ func CreateUser(email string, firstName string, lastName string, password string
 	return result, err
 }
 
+// Authenticates a user given an email address and password.
+// Uses bcrypt package to hash the string of the password
+// So that it can be compared to the stored password.
+// Returns a user object and a boolean to say if the
+// given credentials are valid.
 func AuthUser(email string, password string) (user User, ok bool) {
 
 	var (
-		id string
-		firstname string
-		lastname string
+		id             string
+		firstname      string
+		lastname       string
 		hashedPassword string
 	)
 
@@ -111,6 +124,9 @@ func AuthUser(email string, password string) (user User, ok bool) {
 	return user, ok
 }
 
+// Adds a link to a users account.
+// Returns the results from the update and an error.
+// If the error is nil, then the update was successful.
 func AddLink(user User, link string) (result sql.Result, err error) {
 
 	query := fmt.Sprintf("INSERT INTO links (link, userid) VALUES ('%s', '%s')", link, user.Id)
@@ -121,6 +137,8 @@ func AddLink(user User, link string) (result sql.Result, err error) {
 	return result, err
 }
 
+// Deletes a link from the given users. Uses the user struct
+// Returns results and err.
 func deleteLink(user User, link string) (result sql.Result, err error) {
 
 	query := fmt.Sprintf("DELETE FROM links WHERE link='%s' AND userid='%s'", link, user.Id)
@@ -131,6 +149,9 @@ func deleteLink(user User, link string) (result sql.Result, err error) {
 	return result, err
 }
 
+// Gets user details from the database.
+// Returns a user struct and any error
+// returned form the query.
 func GetUser(userEmail string) (u User, err error) {
 	var (
 		id        string
@@ -157,6 +178,9 @@ func GetUser(userEmail string) (u User, err error) {
 	return u, err
 }
 
+// Gets a list of all users from the database.
+// Returns a slice of user structs for all users
+// in te database.
 func GetAllUsers() (allRows []User, err error) {
 
 	var (
@@ -184,14 +208,20 @@ func GetAllUsers() (allRows []User, err error) {
 	return allRows, err
 }
 
+// Returns all the links from a given users account.
+// Takes in a user struct and returns a profile struct
+// and any errors from the query.
 func GetAllLinks(user User) (profile Profile, err error) {
 
 	var (
-		link string
-		allLinks []string
+		link     string
+		id       int
+		date     string
+		userId   string
+		allLinks []Link
 	)
 
-	query := fmt.Sprintf("SELECT link FROM links WHERE userId='%s'", user.Id)
+	query := fmt.Sprintf("SELECT id, link, date, userid FROM links WHERE userId='%s'", user.Id)
 	log.Println("Q: ", query)
 
 	rows, err := Conn.Query(query)
@@ -202,12 +232,13 @@ func GetAllLinks(user User) (profile Profile, err error) {
 
 	log.Println("Checking for links")
 	for rows.Next() {
-		err := rows.Scan(&link)
+		err := rows.Scan(&id, &link, &date, &userId)
 		if err != nil {
 			fmt.Print(err)
 		}
+		l := Link{Id: id, LinkUrl: link, CreateDate: date, UserId: userId}
 		log.Println("Link: ", link)
-		allLinks = append(allLinks, link)
+		allLinks = append(allLinks, l)
 	}
 
 	profile.User = user
@@ -216,6 +247,8 @@ func GetAllLinks(user User) (profile Profile, err error) {
 	return profile, err
 }
 
+// Gets a user id given an email address.
+// Returns the id as a string and any errors.
 func GetUserId(email string) (id string, err error) {
 
 	query := fmt.Sprintf("SELECT id FROM users WHERE email='%s'", email)

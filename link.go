@@ -1,8 +1,8 @@
 package main
 
 type Link struct {
-	LinkUrl string
+	LinkUrl    string
 	CreateDate string
-	Description string
-	Thumbnail string
+	Id         int
+	UserId     string
 }
