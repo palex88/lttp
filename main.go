@@ -11,10 +11,10 @@ func main() {
 	var port string
 
 	port = ":" + os.Getenv("PORT")
-	log.Println("PORT: ", port)
-	if len(port) == 0 {
+	if len(port) == 1 {
 		port = ":8080"
 	}
+	log.Printf("PORT: %s\n", port)
 
 	http.Handle("/css/", http.FileServer(http.Dir("")))
 	http.HandleFunc("/", homeHandler)
