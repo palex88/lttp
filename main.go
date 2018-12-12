@@ -16,8 +16,13 @@ func main() {
 		fmt.Println(err)
 	}
 
-	//http.HandleFunc("/", homeHandler)
+	port = os.Getenv("PORT")
+	if len(port) == 0 {
+		port = ":8080"
+	}
+
 	http.Handle("/css/", http.FileServer(http.Dir("")))
+	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/home/", homeHandler)
 	http.HandleFunc("/login/", loginHandler)
 	http.HandleFunc("/logout/", logoutHandler)
@@ -25,11 +30,6 @@ func main() {
 	http.HandleFunc("/addlink/", addLinkHandler)
 	http.HandleFunc("/deletelink/", deleteLinkHandler)
 	http.HandleFunc("/account/", accountHandler)
-	//http.HandleFunc("/view/", makeHandler(viewHandler))
-	//http.HandleFunc("/edit/", makeHandler(editHandler))
-	//http.HandleFunc("/save/", makeHandler(saveHandler))
-
-
 
 	log.Printf("Opening server on %s", port)
 	log.Fatal(http.ListenAndServe(port, nil))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	uuid2 "github.com/google/uuid"
@@ -14,9 +15,19 @@ var Conn *sql.DB
 
 func init() {
 
-	var err error
+	var (
+		err error
+		config Config
+		)
 
-	config := ParseConfigs()
+	config.Username = os.Getenv("USERNAME")
+	config.Password = os.Getenv("PASSWORD")
+	config.Endpoint = os.Getenv("ENDPOINT")
+	config.Database = os.Getenv("DATABASE")
+
+	if config == (Config{}) {
+		config = ParseConfigs()
+	}
 
 	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
 		config.Username,
