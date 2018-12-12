@@ -236,6 +236,5 @@ func accountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	user := name.(User)
 
-	//t, _ := template.ParseFiles("pages/Account.html")
 	templates.ExecuteTemplate(w, "account", user)
 }
