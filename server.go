@@ -58,7 +58,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//t, _ := template.ParseFiles("pages/home.html")
-	if (User{}) == user {
+	if (User{}) == original {
 		templates.ExecuteTemplate(w, "home", nil)
 	} else {
 		profile, err = GetAllLinks(original)

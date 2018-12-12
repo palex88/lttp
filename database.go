@@ -25,6 +25,8 @@ func init() {
 	config.Endpoint = os.Getenv("ENDPOINT")
 	config.Database = os.Getenv("DATABASE")
 
+	log.Printf("U: %s, E: %s, D: %s", config.Username, config.Endpoint, config.Database)
+
 	if config == (Config{}) {
 		config = ParseConfigs()
 	}
