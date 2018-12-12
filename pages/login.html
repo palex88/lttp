@@ -1,0 +1,19 @@
+{{define "login"}}
+    {{template "header" .}}
+    <div>
+        <h3>Login</h3>
+    </div>
+    {{if .}}
+        <div>
+            <p>{{.}}</p>
+        </div>
+    {{end}}
+    <div>
+        <form method="post">
+            Email<input type="text" name="email" required><br>
+            Password<input type="password" name="password" required><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    {{template "footer" .}}
+{{end}}

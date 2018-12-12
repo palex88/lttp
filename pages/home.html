@@ -1,0 +1,30 @@
+{{define "home"}}
+    {{template "header" .}}
+    <div class="body">
+        {{if .User.Email}}
+            <form method="get" action="/addlink">
+                <input type="text" name="link" placeholder="Add a new link" required>
+                <input type="submit" name="Submit">
+            </form>
+            {{if .Links}}
+                <table>
+                    {{range .Links}}
+                        <tr>
+                            <td><a href="{{.}}" target="_blank">{{.}}</a></td>
+                            <td>
+                                <a href="/deletelink?link={{.}}">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                </a>
+                            </td>
+                        </tr>
+                    {{end}}
+                </table>
+            {{else}}
+                <p>You haven't saved any links yet.</p>
+            {{end}}
+        {{else}}
+            <p>Not logged in.</p>
+        {{end}}
+    </div>
+    {{template "footer" .}}
+{{end}}
