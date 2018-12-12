@@ -10,7 +10,7 @@ func main() {
 
 	var port string
 
-	port = ":" + os.Getenv("PORT")
+	port = os.Getenv("PORT")
 	log.Println("PORT: ", port)
 	if len(port) == 0 {
 		port = ":8080"
