@@ -31,6 +31,7 @@ type Page struct {
 func init() {
 
 	gob.Register(User{})
+	gob.Register(Profile{})
 
 	log.Printf("Session key: %s", os.Getenv("SESSION_KEY"))
 	//store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
@@ -87,6 +88,8 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
+	var profile Profile
+
 	session, err := store.Get(r, "session-name")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,13 +97,18 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := session.Values["name"]
-	log.Println("Session user: ", user)
+	original, ok := user.(User)
+	if ok {
+		log.Println("Session user: ", user)
+	}
 
 	t, _ := template.ParseFiles("pages/home.html")
 	if (User{}) == user {
 		t.Execute(w, nil)
 	} else {
-		t.Execute(w, user)
+		profile, err = GetAllLinks(original)
+		log.Printf("Profile: %s", profile)
+		t.Execute(w, profile)
 	}
 }
 
@@ -130,10 +138,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		email := r.Form["email"][0]
 		password := r.Form["password"][0]
 
-		auth := AuthUser(email, password)
+		user, auth := AuthUser(email, password)
 		if auth {
-
-			user := User{Email: email}
 
 			session.Values["name"] = user
 			err = session.Save(r, w)
@@ -180,6 +186,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 	name := session.Values["name"]
 	if name != (User{}) {
 		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		return
 	}
 
 	if r.Method == "GET" {
@@ -213,6 +220,46 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func addLinkHandler(w http.ResponseWriter, r *http.Request) {
+
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	name := session.Values["name"]
+	if name == (User{}) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		return
+	}
+	user := name.(User)
+
+	link := r.FormValue("link")
+	AddLink(user, link)
+	http.Redirect(w, r, "/home", http.StatusFound)
+}
+
+func deleteLinkHandler(w http.ResponseWriter, r *http.Request) {
+
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	name := session.Values["name"]
+	if name == (User{}) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		return
+	}
+	user := name.(User)
+
+	keys, ok := r.URL.Query()["link"]
+	log.Printf("Keys: %s, OK: %t", keys, ok)
+
+	deleteLink(user, keys[0])
+	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
