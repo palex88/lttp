@@ -25,6 +25,7 @@ type Page struct {
 	Body  []byte
 }
 
+// Creates the cookie store that handles sessions
 func init() {
 
 	gob.Register(User{})
@@ -41,6 +42,8 @@ func init() {
 	}
 }
 
+// Displays the home page.
+// Uses Go's net/http package
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var profile Profile
@@ -66,6 +69,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Allows a user to login. Redirects if a user is already logged in.
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
@@ -114,6 +118,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Allows user to logout. Redirects if the user is not logged in.
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "session-name")
 	if err != nil {
@@ -133,6 +138,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
+// Create accounts page, cannot create a new account if currently logged in.
 func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
@@ -180,6 +186,7 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Adds a new link to the users account.
 func addLinkHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
@@ -199,6 +206,7 @@ func addLinkHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
+// Deletes a link from a users account.
 func deleteLinkHandler(w http.ResponseWriter, r *http.Request) {
 
 	session, err := store.Get(r, "session-name")
