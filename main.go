@@ -17,6 +17,7 @@ func main() {
 	log.Printf("PORT: %s\n", port)
 
 	http.Handle("/css/", http.FileServer(http.Dir("")))
+	http.Handle("/resources/", http.FileServer(http.Dir("")))
 	http.HandleFunc("/home/", homeHandler)
 	http.HandleFunc("/login/", loginHandler)
 	http.HandleFunc("/logout/", logoutHandler)
