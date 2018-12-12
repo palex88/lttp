@@ -1,6 +1,6 @@
 {{define "home"}}
     {{template "header" .}}
-    <div class="body">
+    <div class="body middle">
         {{if .User.Email}}
             <form method="get" action="/addlink">
                 <input type="text" name="link" placeholder="Add a new link" required>

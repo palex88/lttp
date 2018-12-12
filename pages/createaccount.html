@@ -1,22 +1,22 @@
 {{define "createaccount"}}
     {{template "header" .}}
-    <div>
+    <div class="body middle">
         <h1>Create a new Account</h1>
-    </div>
-    {{if .}}
+        {{if .}}
+            <div>
+                <p>{{.}}</p>
+            </div>
+        {{end}}
         <div>
-            <p>{{.}}</p>
+            <form method="post">
+                First Name<input type="text" name="firstname" required><br>
+                Last Name<input type="text" name="lastname" required><br>
+                Email<input type="text" name="email" required><br>
+                Password<input type="password" name="password" required><br>
+                Confirm Password<input type="password" name="confirmpassword" required><br>
+                <input type="submit" value="Submit">
+            </form>
         </div>
-    {{end}}
-    <div>
-        <form method="post">
-            First Name<input type="text" name="firstname" required><br>
-            Last Name<input type="text" name="lastname" required><br>
-            Email<input type="text" name="email" required><br>
-            Password<input type="password" name="password" required><br>
-            Confirm Password<input type="password" name="confirmpassword" required><br>
-            <input type="submit" value="Submit">
-        </form>
     </div>
     {{template "footer" .}}
 {{end}}

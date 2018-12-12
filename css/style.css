@@ -1,10 +1,13 @@
 .header ul {
-    width: 100%;
+    width: 80%;
     list-style-type: none;
     margin: 0;
+    margin-top: 15px;
+    margin-bottom: 20px;
     padding: 0;
     overflow: hidden;
     background-color: #6666ff;
+    border-radius: 3px;
 }
 
 .header li {
@@ -23,6 +26,24 @@
     background-color: #b3b3ff;
 }
 
+.wrapper {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 20% 80% 20%;
+}
+
+.side {
+    width: 10%;
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
 body {
     font-family: "Courier New";
 }
@@ -35,11 +56,10 @@ footer {
     height: 50px;
     background-color: #bfbfbf;
     color: #404040;
-    text-align: left;
+    text-align: center;
     margin: auto;
     vertical-align: center;
     line-height: 50px;
-    padding-left: 10%;
 }
 
 span {
