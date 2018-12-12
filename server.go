@@ -150,9 +150,8 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		if flash := session.Flashes(); len(flash) > 0 {
 			log.Printf("Flash: %s", flash)
-			//t, _ := template.ParseFiles("pages/create-account.html")
-			templates.ExecuteTemplate(w, "createaccount", flash)
 		}
+		templates.ExecuteTemplate(w, "createaccount", nil)
 	} else if r.Method == "POST" {
 		email := r.FormValue("email")
 		firstName := r.FormValue("firstname")
