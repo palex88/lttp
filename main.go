@@ -1,35 +1,35 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 )
 
 func main() {
 
-	var db *sql.DB
-	config := ParseConfigs("config.json")
+	var port = ":8080"
 
-	db = OpenDatabase(config)
-
-	allRows := GetAllUsers(db)
-	for _, element := range allRows {
-		fmt.Println(element.Email)
+	err := os.Setenv("SESSION_KEY", "RVPF3qQx9qK?riUgnV$r3F(a")
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	allLinks := GetAllLinks(db, "60049ce6-f6c3-11e8-aaa6-dca9047d1371")
-	for _, element := range allLinks {
-		fmt.Println(element)
-	}
+	//http.HandleFunc("/", homeHandler)
+	http.Handle("/css/", http.FileServer(http.Dir("")))
+	http.HandleFunc("/home/", homeHandler)
+	http.HandleFunc("/login/", loginHandler)
+	http.HandleFunc("/logout/", logoutHandler)
+	http.HandleFunc("/create-account/", createAccountHandler)
+	http.HandleFunc("/addlink", addLinkHandler)
+	http.HandleFunc("/deletelink", deleteLinkHandler)
+	http.HandleFunc("/view/", makeHandler(viewHandler))
+	http.HandleFunc("/edit/", makeHandler(editHandler))
+	http.HandleFunc("/save/", makeHandler(saveHandler))
 
-	//result := CreateUser(db, "alex@test.com", "Alex", "Faker")
-	//fmt.Println(result)
 
-	//var port = ":8080"
-	//
-	//http.HandleFunc("/view/", makeHandler(viewHandler))
-	//http.HandleFunc("/edit/", makeHandler(editHandler))
-	//http.HandleFunc("/save/", makeHandler(saveHandler))
-	//
-	//log.Fatal(http.ListenAndServe(port, nil))
+
+	log.Printf("Opening server on %s", port)
+	log.Fatal(http.ListenAndServe(port, nil))
 }
