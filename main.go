@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,11 +9,6 @@ import (
 func main() {
 
 	var port = ":8080"
-
-	err := os.Setenv("SESSION_KEY", "RVPF3qQx9qK?riUgnV$r3F(a")
-	if err != nil {
-		fmt.Println(err)
-	}
 
 	port = os.Getenv("PORT")
 	if len(port) == 0 {

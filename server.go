@@ -31,8 +31,8 @@ func init() {
 	gob.Register(Profile{})
 
 	log.Printf("Session key: %s", os.Getenv("SESSION_KEY"))
-	store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-	//store = sessions.NewCookieStore([]byte("RVPF3qQx9qK?riUgnV$r3F(a"))
+	//store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+	store = sessions.NewCookieStore([]byte("RVPF3qQx9qK?riUgnV$r3F(a"))
 	store.Options = &sessions.Options{
 		Domain:   "localhost",
 		Path:     "/",
