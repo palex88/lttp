@@ -5,23 +5,20 @@ import (
 	"fmt"
 	"github.com/gorilla/sessions"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"regexp"
 )
 
 var store *sessions.CookieStore
 
 var templates = template.Must(template.ParseFiles(
-	"edit.html",
-	"view.html",
 	"pages/home.html",
+	"pages/login.html",
 	"pages/account.html",
-	"pages/login.html"))
-
-var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+	"pages/createaccount.html",
+	"pages/header.html",
+	"pages/footer.html"))
 
 type Page struct {
 	Title string
@@ -44,48 +41,6 @@ func init() {
 	}
 }
 
-func (p *Page) save() error {
-	filename := p.Title + ".txt"
-	return ioutil.WriteFile(filename, p.Body, 0600)
-}
-
-func loadPage(title string) (*Page, error) {
-	filename := title + ".txt"
-	body, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return &Page{Title: title, Body: body}, nil
-}
-
-func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
-	p, err := loadPage(title)
-	if err != nil {
-		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-		return
-	}
-	renderTemplate(w, "view", p)
-}
-
-func editHandler(w http.ResponseWriter, r *http.Request, title string) {
-	p, err := loadPage(title)
-	if err != nil {
-		p = &Page{Title: title}
-	}
-	renderTemplate(w, "edit", p)
-}
-
-func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
-	body := r.FormValue("body")
-	p := &Page{Title: title, Body: []byte(body)}
-	err := p.save()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.Redirect(w, r, "/view/"+title, http.StatusFound)
-}
-
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	var profile Profile
@@ -102,13 +57,13 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Session user: ", user)
 	}
 
-	t, _ := template.ParseFiles("pages/home.html")
+	//t, _ := template.ParseFiles("pages/home.html")
 	if (User{}) == user {
-		t.Execute(w, nil)
+		templates.ExecuteTemplate(w, "home", nil)
 	} else {
 		profile, err = GetAllLinks(original)
 		log.Printf("Profile: %s", profile)
-		t.Execute(w, profile)
+		templates.ExecuteTemplate(w, "home", profile)
 	}
 }
 
@@ -123,11 +78,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if (User{}) != name {
 		log.Println("User null")
 		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		return
 	}
 
 	if r.Method == "GET" {
-		t, _ := template.ParseFiles("pages/login.html")
-		t.Execute(w, nil)
+		log.Println("GET login page")
+		//flash := session.Flashes()
+		//t, _ := template.ParseFiles("pages/login.html")
+		templates.ExecuteTemplate(w, "login", nil)
 	}
 
 	if r.Method == "POST" {
@@ -140,7 +98,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		user, auth := AuthUser(email, password)
 		if auth {
-
 			session.Values["name"] = user
 			err = session.Save(r, w)
 			if err != nil {
@@ -152,6 +109,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Printf("Login auth failed: %s\n", email)
 			session.AddFlash("error", "Username or password incorrect.")
+			session.Save(r, w)
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		}
 	}
@@ -190,10 +148,11 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		flash := session.Flashes("error")
-		log.Printf("Flash: %s", flash)
-		t, _ := template.ParseFiles("pages/createaccount.html")
-		t.Execute(w, flash)
+		if flash := session.Flashes(); len(flash) > 0 {
+			log.Printf("Flash: %s", flash)
+			//t, _ := template.ParseFiles("pages/create-account.html")
+			templates.ExecuteTemplate(w, "createaccount", flash)
+		}
 	} else if r.Method == "POST" {
 		email := r.FormValue("email")
 		firstName := r.FormValue("firstname")
@@ -202,22 +161,23 @@ func createAccountHandler(w http.ResponseWriter, r *http.Request) {
 		confirmPassword := r.FormValue("confirmpassword")
 		if password != confirmPassword {
 			log.Println("Passwords don't match")
-			session.AddFlash("error", "Passwords dont match.")
+			session.AddFlash("Passwords dont match.")
+			session.Save(r, w)
+			http.Redirect(w, r, "/create-account", http.StatusSeeOther)
+			return
+		}
+
+		result, err := CreateUser(email, firstName, lastName, password)
+		if err != nil {
+			log.Println(err)
+			session.AddFlash("error", "Account could not be created, try a different email.")
 			session.Save(r, w)
 			http.Redirect(w, r, "/create-account", http.StatusSeeOther)
 		} else {
-			result, err := CreateUser(email, firstName, lastName, password)
-			if err != nil {
-				log.Println(err)
-				session.AddFlash("error", "Account could not be created, try a different email.")
-				session.Save(r, w)
-				http.Redirect(w, r, "/create-account", http.StatusSeeOther)
-			} else {
-				log.Printf("New account results: %s\n", result)
-				session.Values["name"] = User{Email: email, FirstName: firstName, LastName: lastName}
-				session.Save(r, w)
-				http.Redirect(w, r, "/home", 302)
-			}
+			log.Printf("New account results: %s\n", result)
+			session.Values["name"] = User{Email: email, FirstName: firstName, LastName: lastName}
+			session.Save(r, w)
+			http.Redirect(w, r, "/home", 302)
 		}
 	}
 }
@@ -262,20 +222,20 @@ func deleteLinkHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusFound)
 }
 
-func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+func accountHandler(w http.ResponseWriter, r *http.Request) {
+
+	session, err := store.Get(r, "session-name")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
 
-func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		m := validPath.FindStringSubmatch(r.URL.Path)
-		if m == nil {
-			http.NotFound(w, r)
-			return
-		}
-		fn(w, r, m[0])
+	name := session.Values["name"]
+	if name == (User{}) {
+		http.Redirect(w, r, "/home", http.StatusSeeOther)
+		return
 	}
+	user := name.(User)
+
+	//t, _ := template.ParseFiles("pages/Account.html")
+	templates.ExecuteTemplate(w, "account", user)
 }

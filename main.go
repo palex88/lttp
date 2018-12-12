@@ -22,11 +22,12 @@ func main() {
 	http.HandleFunc("/login/", loginHandler)
 	http.HandleFunc("/logout/", logoutHandler)
 	http.HandleFunc("/create-account/", createAccountHandler)
-	http.HandleFunc("/addlink", addLinkHandler)
-	http.HandleFunc("/deletelink", deleteLinkHandler)
-	http.HandleFunc("/view/", makeHandler(viewHandler))
-	http.HandleFunc("/edit/", makeHandler(editHandler))
-	http.HandleFunc("/save/", makeHandler(saveHandler))
+	http.HandleFunc("/addlink/", addLinkHandler)
+	http.HandleFunc("/deletelink/", deleteLinkHandler)
+	http.HandleFunc("/account/", accountHandler)
+	//http.HandleFunc("/view/", makeHandler(viewHandler))
+	//http.HandleFunc("/edit/", makeHandler(editHandler))
+	//http.HandleFunc("/save/", makeHandler(saveHandler))
 
 
 
