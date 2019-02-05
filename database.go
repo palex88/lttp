@@ -27,17 +27,19 @@ func init() {
 	config.Password = os.Getenv("PASSWORD")
 	config.Endpoint = os.Getenv("ENDPOINT")
 	config.Database = os.Getenv("DATABASE")
+	config.Port = os.Getenv("PORT")
 
-	log.Printf("U: %s, E: %s, D: %s", config.Username, config.Endpoint, config.Database)
+	log.Printf("U: %s, E: %s, D: %s, P: %s", config.Username, config.Endpoint, config.Database, config.Port)
 
 	if config == (Config{}) {
 		config = ParseConfigs()
 	}
 
-	conn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s",
+	conn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
 		config.Username,
 		config.Password,
 		config.Endpoint,
+		config.Port,
 		config.Database)
 
 	Conn, err = sql.Open("mysql", conn)

@@ -12,6 +12,7 @@ type Config struct {
 	Password string `json:"password"`
 	Endpoint string `json:"endpoint"`
 	Database string `json:"database"`
+	Port string `json:"port"`
 }
 
 func ParseConfigs() (config Config) {
